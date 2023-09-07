@@ -39,5 +39,5 @@ class BotApi{
     std::vector<Update> GetUpdates();
     Update GetLastUpdate();
     void SendMassage(std::string message, size_t chat_id, size_t reply_to_message_id = 0, bool disable_notification = 0, std::string parse_mode = "");
-    int ForwardMessage(size_t chat_id, size_t from_chat_id, size_t message_id);
+    void ForwardMessage(size_t chat_id, size_t from_chat_id, size_t message_id);
 };

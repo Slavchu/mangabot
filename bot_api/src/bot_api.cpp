@@ -28,6 +28,8 @@ size_t writeFunction(void *ptr, size_t size, size_t nmemb, std::string* data) { 
     return size * nmemb;
 }
 
+
+
 std::vector <Update> BotApi::GetUpdates(){
     auto * curl = curl_easy_init();
     if(!curl) return std::vector<Update>();
@@ -55,12 +57,10 @@ std::vector <Update> BotApi::GetUpdates(){
     curl_easy_perform(curl);
     curl_easy_cleanup(curl);
     json update = json::parse(buffer);
-    std::cout << buffer;
     
     std::vector <Update> result;
 
     if (update.find("result") != update.end() && update.find("result")->size() > 0){    //json to normal data, but still fucking magic
-        std::cout << update;
         for (auto &it : update.find("result").value()){
             Update up;
             up.update_id = it["update_id"];
@@ -95,7 +95,6 @@ std::vector <Update> BotApi::GetUpdates(){
     return result;
 }
 
-
 void BotApi::SendMassage(std::string message, size_t chat_id, size_t reply_to_message_id, bool disable_notification, std::string parse_mode){
     auto curl = curl_easy_init();
     if(!curl){
@@ -113,6 +112,35 @@ void BotApi::SendMassage(std::string message, size_t chat_id, size_t reply_to_me
     std::cout << PostRequest;
 
     std::string url = "https://api.telegram.org/bot" + BotToken + "/sendMessage";    
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, PostRequest.size());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, PostRequest.c_str());
+    
+    curl_slist * header = 0;
+    header = curl_slist_append(header, "Content-Type: application/json");
+    
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
+    
+    curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+}
+
+void BotApi::ForwardMessage(size_t chat_id, size_t from_chat_id, size_t message_id){
+    auto curl = curl_easy_init();
+    if(!curl){
+        return;
+    }
+    
+    
+    json PostMessage;
+    PostMessage["chat_id"] = chat_id;
+    PostMessage["from_chat_id"] = from_chat_id;
+    PostMessage["message_id"] = message_id; 
+    PostMessage["protect_content"] = "true";
+    std::string PostRequest = PostMessage.dump();
+    std::cout << PostRequest;
+
+    std::string url = "https://api.telegram.org/bot" + BotToken + "/copyMessage";    
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, PostRequest.size());
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, PostRequest.c_str());

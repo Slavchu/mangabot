@@ -7,6 +7,7 @@
 #include <fstream>
 #include <ctime>
 #include <iomanip>
+#include <chrono>
 ThreadManager *thread_manager = NULL;
 class MessageAnalyzer: public IFunct{
     BotApi * bot;
@@ -32,29 +33,34 @@ class MessageAnalyzer: public IFunct{
     }
 };
 int main(int argc, char **argv){
-    
-    //Importing params
+    unsigned int delay = 0;
+
     //loger
     std::ofstream log("log.txt", std::ios::app);
     auto t = std::time(0);
     auto tm = *std::localtime(&t);
     BotApi * bot;
+    
+    
+    
+    //Importing params
+
     try{
         SettingsImporter settings("settings.txt");
         settings.import_settings();
 
         bot = new BotApi(settings.get_bot_id());
-        thread_manager = new ThreadManager;
-    } catch(SettingsImporterException_NotFound &e){
-        std::cout << "Critical error:";
-         log << "-----------------------------\n"
+    } catch(SettingsImporterCriticalException &e){
+        std::cerr << "Critical error:" << e.what() << std::endl; 
+        log << "-----------------------------\n"
         << "BOT FAILED "
         << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << std::endl
         << e.what() << std::endl
         <<"-----------------------------\n";
-    }
+        return -1;
+    } 
     
-
+    auto thread_manager = new ThreadManager;
     
 
 
@@ -62,7 +68,10 @@ int main(int argc, char **argv){
         << "BOT STARTED "
         << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << std::endl
         <<"-----------------------------\n";
-        
+    std::cout << "-----------------------------\n"
+        << "BOT STARTED "
+        << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << std::endl
+        <<"-----------------------------\n";
     //Getting updates   
     for (;;){
         auto updates = bot->GetUpdates();
@@ -71,7 +80,6 @@ int main(int argc, char **argv){
             std::cout << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << std::endl;
             for (auto &it : updates){
                 auto msg_anal = new MessageAnalyzer(bot, it);
-                msg_anal->callFunction();
                 thread_manager->add_function(msg_anal);
 
                 std::cout << "---------Update :" << it.update_id << "-----------------";
@@ -79,5 +87,8 @@ int main(int argc, char **argv){
                 log << "New message: \nchat_id:" << it.message.chat_id << " message_id: " << it.message.message_id << " user_id:" << it.message.from.user_id << std::endl;
             }
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+        
     }
+    delete thread_manager;
 }

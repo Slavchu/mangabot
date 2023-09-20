@@ -9,9 +9,11 @@
 #include <iomanip>
 #include <chrono>
 ThreadManager *thread_manager = NULL;
+
 class MessageAnalyzer: public IFunct{
     BotApi * bot;
     struct Update update;
+    
     public:
     MessageAnalyzer(BotApi * bot, Update update){
         this->bot = bot;
@@ -20,9 +22,9 @@ class MessageAnalyzer: public IFunct{
     virtual void callFunction() override{
         if(!update.message.is_document){
             if(update.message.text == "hentai")
-                bot->SendMassage("Влад, заєбав", update.message.chat_id);
+                bot->SendMessage("Влад, заєбав", update.message.chat_id);
             else
-                bot->SendMassage(update.message.text, update.message.chat_id);
+                bot->SendMessage(update.message.text, update.message.chat_id);
         }
         else{
             bot->ForwardMessage(1240898707, update.message.chat_id, update.message.message_id);
@@ -85,6 +87,7 @@ int main(int argc, char **argv){
                 std::cout << "---------Update :" << it.update_id << "-----------------";
                 std::cout << "New message: \nchat_id:" << it.message.chat_id << " message_id: " << it.message.message_id << " user_id:" << it.message.from.user_id << std::endl;
                 log << "New message: \nchat_id:" << it.message.chat_id << " message_id: " << it.message.message_id << " user_id:" << it.message.from.user_id << std::endl;
+                
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(delay));

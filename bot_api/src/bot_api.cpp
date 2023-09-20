@@ -95,7 +95,7 @@ std::vector <Update> BotApi::GetUpdates(){
     return result;
 }
 
-void BotApi::SendMassage(std::string message, size_t chat_id, size_t reply_to_message_id, bool disable_notification, std::string parse_mode){
+void BotApi::SendMessage(std::string message, size_t chat_id, size_t reply_to_message_id, bool disable_notification, std::string parse_mode, std::vector<Button> buttons){
     auto curl = curl_easy_init();
     if(!curl){
         return;
@@ -108,6 +108,10 @@ void BotApi::SendMassage(std::string message, size_t chat_id, size_t reply_to_me
     PostMessage["disable_notification"] = disable_notification;
     if(reply_to_message_id) PostMessage["reply_to_message_id"] = reply_to_message_id;
     if (parse_mode != "") PostMessage["parse_mode"] = parse_mode;
+    if(buttons.size()){
+        json ReplyKeayboardMarkup;
+        json Buttons = json::array();
+    }
     std::string PostRequest = PostMessage.dump();
     std::cout << PostRequest;
 
@@ -124,6 +128,8 @@ void BotApi::SendMassage(std::string message, size_t chat_id, size_t reply_to_me
     curl_easy_perform(curl);
     curl_easy_cleanup(curl);
 }
+
+
 
 void BotApi::ForwardMessage(size_t chat_id, size_t from_chat_id, size_t message_id){
     auto curl = curl_easy_init();

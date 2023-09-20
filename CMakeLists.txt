@@ -21,5 +21,3 @@ target_link_libraries(mangabot bot_api)
 add_subdirectory(database)
 target_link_libraries(mangabot mangabot_database)
 
-find_package(CURL REQUIRED)
-target_link_libraries(mangabot ${CURL_LIBRARIES})

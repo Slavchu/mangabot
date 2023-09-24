@@ -38,6 +38,7 @@ class BotApi{
     }
     std::vector<Update> GetUpdates();
     Update GetLastUpdate();
-    void SendMassage(std::string message, size_t chat_id, size_t reply_to_message_id = 0, bool disable_notification = 0, std::string parse_mode = "");
+    void SendMessage(std::string message, size_t chat_id, size_t reply_to_message_id = 0, std::vector<std::vector<std::string>> buttons = {}, bool one_time_keyboard = true, bool disable_notification = 0, std::string parse_mode = "");
+    void SendRemoveKeyboard(std::string message, size_t chat_id, size_t reply_to_message_id = 0,bool disable_notification = 0, std::string parse_mode = "" );
     void ForwardMessage(size_t chat_id, size_t from_chat_id, size_t message_id);
 };

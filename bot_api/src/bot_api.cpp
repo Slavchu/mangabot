@@ -1,4 +1,3 @@
-#define DBG_BOT_API
 /*
 
 

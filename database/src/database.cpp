@@ -30,5 +30,5 @@ int SettingsImporter::import_settings(){
     }
 
     if(!has_bot_id) throw SettingsImporterCriticalException("Bot id field empty");
-
+    return 0;
 }

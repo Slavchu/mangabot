@@ -38,7 +38,9 @@ class SettingsImporter{
     unsigned int delay;
     std::string file;
     public:
-    SettingsImporter(std::string filelocation) :file(filelocation) {};
+    SettingsImporter(std::string filelocation) :file(filelocation) {
+        
+    };
     int import_settings();
     std::string get_bot_id() const{
         return bot_id;

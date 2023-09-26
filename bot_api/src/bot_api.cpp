@@ -18,9 +18,11 @@
 */
 #include <bot_api.hpp>
 #include <curl/curl.h>
-#include <iostream>
 #include <nlohmann/json.hpp>
 
+#ifdef DBG_BOT_API
+#include <iostream>
+#endif
 using json = nlohmann::json;
 
 size_t writeFunction(void *ptr, size_t size, size_t nmemb, std::string* data) {     //For curl reply
@@ -34,7 +36,6 @@ std::vector <Update> BotApi::GetUpdates(){
     auto * curl = curl_easy_init();
     if(!curl) return std::vector<Update>();
     
-
     std::string offset = "";
     if(update_offset != 0){                                         //It's for not to getting updates you have already got. 
         offset+= "?offset="; 
@@ -95,7 +96,7 @@ std::vector <Update> BotApi::GetUpdates(){
     return result;
 }
 
-void BotApi::SendMassage(std::string message, size_t chat_id, size_t reply_to_message_id, bool disable_notification, std::string parse_mode){
+void BotApi::SendMessage(std::string message, size_t chat_id, size_t reply_to_message_id,std::vector<std::vector<std::string>> buttons, bool one_time_keyboard ,bool disable_notification, std::string parse_mode){
     auto curl = curl_easy_init();
     if(!curl){
         return;
@@ -103,14 +104,78 @@ void BotApi::SendMassage(std::string message, size_t chat_id, size_t reply_to_me
     
     
     json PostMessage;
+     if(buttons.size()){
+        json ReplyMarkup;
+        ReplyMarkup["resize_keyboard"] = true;
+        ReplyMarkup["one_time_keyboard"] = one_time_keyboard;
+        ReplyMarkup["keyboard"] = json::array();
+        ReplyMarkup["is_persistent"] = true;
+        auto &arr =ReplyMarkup["keyboard"];
+        for(int y = 0; y < buttons.size(); y++){
+            arr[y] = json::array();
+            for(int x = 0; x < buttons[y].size(); x++ ){
+                json keyboard;
+                
+                keyboard["text"] = buttons[y][x];
+                arr[y].push_back(keyboard);
+            }
+        }
+#ifdef DBG_BOT_API
+        std::cout << ReplyMarkup.dump() << std::endl;
+#endif
+        PostMessage["reply_markup"] = ReplyMarkup.dump(); 
+
+        
+    }
     PostMessage["chat_id"] = chat_id;
     PostMessage["text"] = message;
     PostMessage["disable_notification"] = disable_notification;
     if(reply_to_message_id) PostMessage["reply_to_message_id"] = reply_to_message_id;
     if (parse_mode != "") PostMessage["parse_mode"] = parse_mode;
+   
     std::string PostRequest = PostMessage.dump();
-    std::cout << PostRequest;
+#ifdef DBG_BOT_API
+    std::cout << PostRequest << std::endl;
+#endif
+    std::string url = "https://api.telegram.org/bot" + BotToken + "/sendMessage";    
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, PostRequest.size());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, PostRequest.c_str());
+    
+    curl_slist * header = 0;
+    header = curl_slist_append(header, "Content-Type: application/json");
+    
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
+    
+    curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+}
 
+void BotApi::SendRemoveKeyboard(std::string message, size_t chat_id, size_t reply_to_message_id, bool disable_notification, std::string parse_mode){
+    auto curl = curl_easy_init();
+    if(!curl){
+        return;
+    }
+    
+    
+    json PostMessage;
+     
+    json ReplyMarkup;
+    ReplyMarkup["remove_keyboard"] = true; 
+    PostMessage["reply_markup"] = ReplyMarkup.dump(); 
+
+        
+    
+    PostMessage["chat_id"] = chat_id;
+    PostMessage["text"] = message;
+    PostMessage["disable_notification"] = disable_notification;
+    if(reply_to_message_id) PostMessage["reply_to_message_id"] = reply_to_message_id;
+    if (parse_mode != "") PostMessage["parse_mode"] = parse_mode;
+   
+    std::string PostRequest = PostMessage.dump();
+#ifdef DBG_BOT_API
+    std::cout << PostRequest << std::endl;
+#endif
     std::string url = "https://api.telegram.org/bot" + BotToken + "/sendMessage";    
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, PostRequest.size());
@@ -138,8 +203,9 @@ void BotApi::ForwardMessage(size_t chat_id, size_t from_chat_id, size_t message_
     PostMessage["message_id"] = message_id; 
     PostMessage["protect_content"] = "true";
     std::string PostRequest = PostMessage.dump();
+#ifdef DBG_BOT_API 
     std::cout << PostRequest;
-
+#endif
     std::string url = "https://api.telegram.org/bot" + BotToken + "/copyMessage";    
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, PostRequest.size());

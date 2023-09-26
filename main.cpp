@@ -23,13 +23,13 @@ class MessageAnalyzer: public IFunct{
         
         if(!update.message.is_document){
             if(update.message.text == "hentai")
-                bot->SendMessage("Влад, заєбав", update.message.chat_id, 0, {{"hentai", "HENTAI"}});
+                bot->send_message("Влад, заєбав", update.message.chat_id, 0, {{"hentai", "HENTAI"}});
             else{
-                bot->SendMessage("Ok", update.message.chat_id, 0, {{"uhh", "uhhhhhhhhhh"}});
+                bot->send_message("Ok", update.message.chat_id, 0, {{"uhh", "uhhhhhhhhhh"}});
             }
         }
         else{
-            bot->ForwardMessage(1240898707, update.message.chat_id, update.message.message_id);
+            bot->forward_message(1240898707, update.message.chat_id, update.message.message_id);
         }
     }
     virtual void onTaskEnd() override{
@@ -87,14 +87,14 @@ int main(int argc, char **argv){
     //Getting updates   
     thread_manager->start_work();
     for (;;){
-        auto updates = bot->GetUpdates();
+        auto updates = bot->get_updates();
         std::cout << "Updates : " << updates.size() << std::endl;
         if (updates.size()){
             std::cout << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << std::endl;
             for (auto &it : updates){
                 auto msg_anal = new MessageAnalyzer(bot, it);
-                //thread_manager->add_function(msg_anal);
-                msg_anal->callFunction();
+                thread_manager->add_function(msg_anal);
+                //msg_anal->callFunction();
                 std::cout << "---------Update :" << it.update_id << "-----------------\n";
                 std::cout << "New message: \nchat_id:" << it.message.chat_id << " message_id: " << it.message.message_id << " user_id:" << it.message.from.user_id << std::endl;
                 ss << "New message: \nchat_id:" << it.message.chat_id << " message_id: " << it.message.message_id << " user_id:" << it.message.from.user_id << std::endl;

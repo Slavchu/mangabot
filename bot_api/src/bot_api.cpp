@@ -26,13 +26,14 @@
 using json = nlohmann::json;
 
 size_t writeFunction(void *ptr, size_t size, size_t nmemb, std::string* data) {     //For curl reply
-    data->append((char*) ptr, size * nmemb);
+    if(data)
+        data->append((char*) ptr, size * nmemb);
     return size * nmemb;
 }
 
 
 
-std::vector <Update> BotApi::GetUpdates(){
+std::vector <Update> BotApi::get_updates(){
     auto * curl = curl_easy_init();
     if(!curl) return std::vector<Update>();
     
@@ -65,38 +66,46 @@ std::vector <Update> BotApi::GetUpdates(){
         for (auto &it : update.find("result").value()){
             Update up;
             up.update_id = it["update_id"];
-            if (it.find("message") != it.end())
-            {
+            update_offset = up.update_id+1;
+            if (it.find("message") != it.end()){
                 auto msg = it["message"];
                 struct Message message;
                 message.message_id = msg["message_id"];
                 message.chat_id = msg["chat"]["id"];
-                message.from.is_bot = msg["from"]["is_bot"];
-                message.from.user_id = msg["from"]["id"];
-                message.from.username = msg["from"]["username"];
-                if(msg.find("document") != msg.end()){
+                if (msg.find("from") != msg.end()){
+                    message.from.is_bot = msg["from"]["is_bot"];
+                    message.from.user_id = msg["from"]["id"];
+                    if (msg["from"].find("username") != msg["from"].end())
+                        message.from.username = msg["from"]["username"];
+                }
+                if (msg.find("document") != msg.end()){
                     message.is_document = true;
-                    if(msg["document"]["mime_type"] != "application/pdf") continue;
-                    else message.text = msg["document"]["file_id"];
 
+                    if (msg["document"]["mime_type"] != "application/pdf")
+                        continue;
+                    else
+                        message.text = msg["document"]["file_id"];
                 }
                 else if (msg.find("text") != msg.end()){
                     message.is_document = false;
                     message.text = msg["text"];
                 }
-                else continue;
+                else
+                    continue;
                 up.message = message;
             }
             else
                 continue;
             result.push_back(up);
         }
-        update_offset = result[result.size() - 1].update_id + 1;
+        
     }
     return result;
 }
 
-void BotApi::SendMessage(std::string message, size_t chat_id, size_t reply_to_message_id,std::vector<std::vector<std::string>> buttons, bool one_time_keyboard ,bool disable_notification, std::string parse_mode){
+//this is a huge piece of shit i've written.
+void BotApi::send_message(std::string message, size_t chat_id, size_t reply_to_message_id,std::vector<std::vector<std::string>> buttons, bool one_time_keyboard ,bool disable_notification, std::string parse_mode){
+
     auto curl = curl_easy_init();
     if(!curl){
         return;
@@ -141,17 +150,19 @@ void BotApi::SendMessage(std::string message, size_t chat_id, size_t reply_to_me
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, PostRequest.size());
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, PostRequest.c_str());
-    
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,writeFunction);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, 0);
+
     curl_slist * header = 0;
     header = curl_slist_append(header, "Content-Type: application/json");
-    
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
-    
+
+
     curl_easy_perform(curl);
     curl_easy_cleanup(curl);
 }
 
-void BotApi::SendRemoveKeyboard(std::string message, size_t chat_id, size_t reply_to_message_id, bool disable_notification, std::string parse_mode){
+void BotApi::send_remove_keyboard(std::string message, size_t chat_id, size_t reply_to_message_id, bool disable_notification, std::string parse_mode){ //Don't fucking touch it, it just works
     auto curl = curl_easy_init();
     if(!curl){
         return;
@@ -180,7 +191,8 @@ void BotApi::SendRemoveKeyboard(std::string message, size_t chat_id, size_t repl
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, PostRequest.size());
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, PostRequest.c_str());
-    
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, 0);
+
     curl_slist * header = 0;
     header = curl_slist_append(header, "Content-Type: application/json");
     
@@ -190,7 +202,7 @@ void BotApi::SendRemoveKeyboard(std::string message, size_t chat_id, size_t repl
     curl_easy_cleanup(curl);
 }
 
-void BotApi::ForwardMessage(size_t chat_id, size_t from_chat_id, size_t message_id){
+void BotApi::forward_message(size_t chat_id, size_t from_chat_id, size_t message_id){
     auto curl = curl_easy_init();
     if(!curl){
         return;
@@ -210,7 +222,8 @@ void BotApi::ForwardMessage(size_t chat_id, size_t from_chat_id, size_t message_
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, PostRequest.size());
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, PostRequest.c_str());
-    
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, 0);
+
     curl_slist * header = 0;
     header = curl_slist_append(header, "Content-Type: application/json");
     

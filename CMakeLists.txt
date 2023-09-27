@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 
 
-add_executable(mangabot main.cpp)
+add_executable(mangabot main.cpp bot.hpp bot.cpp)
 
 
 
@@ -21,5 +21,6 @@ target_link_libraries(mangabot bot_api)
 add_subdirectory(database)
 target_link_libraries(mangabot mangabot_database)
 
-find_package(CURL REQUIRED)
-target_link_libraries(mangabot ${CURL_LIBRARIES})
+
+add_subdirectory(logger)
+target_link_libraries(mangabot logger)

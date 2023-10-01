@@ -14,6 +14,8 @@ add_executable(mangabot main.cpp bot.hpp bot.cpp)
 add_subdirectory(thread_manager)
 target_link_libraries(mangabot slavchoo_thread_manager)
 
+add_subdirectory(telegraph_api)
+target_link_libraries(mangabot telegraph_api)
 
 add_subdirectory(bot_api)
 target_link_libraries(mangabot bot_api)

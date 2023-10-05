@@ -24,20 +24,25 @@
 #include <iostream>
 #endif
 using json = nlohmann::json;
-
-size_t writeFunction(void *ptr, size_t size, size_t nmemb, std::string* data) {     //For curl reply
+curl_slist * header = 0;
+namespace{
+size_t writeFunction(void *ptr, size_t size, size_t nmemb, std::string *data) {     //For curl reply
     if(data)
         data->append((char*) ptr, size * nmemb);
     return size * nmemb;
 }
+}
+BotApi::BotApi(std::string token): BotToken(token){
+    header = curl_slist_append(header, "Content-Type: application/json");
 
+}
 
-
-std::vector <Update> BotApi::get_updates(){
+std::vector<Update> BotApi::get_updates()
+{
     auto * curl = curl_easy_init();
     if(!curl) return std::vector<Update>();
     
-    std::string offset = "";
+    std::string offset("");
     if(update_offset != 0){                                         //It's for not to getting updates you have already got. 
         offset+= "?offset="; 
         offset+= std::to_string(update_offset);
@@ -47,7 +52,7 @@ std::vector <Update> BotApi::get_updates(){
 
     std::string url = "https://api.telegram.org/bot" + BotToken + "/getUpdates" + offset;  //forming get request
     
-    std::string buffer;
+    std::string buffer("");
   
 
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());            //fucking magic
@@ -58,6 +63,7 @@ std::vector <Update> BotApi::get_updates(){
 
     curl_easy_perform(curl);
     curl_easy_cleanup(curl);
+    if(buffer.empty()) return std::vector<Update>();    
     json update = json::parse(buffer);
     
     std::vector <Update> result;
@@ -153,10 +159,9 @@ void BotApi::send_message(std::string message, size_t chat_id, size_t reply_to_m
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,writeFunction);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, 0);
 
-    curl_slist * header = 0;
-    header = curl_slist_append(header, "Content-Type: application/json");
+   
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
-
+    
 
     curl_easy_perform(curl);
     curl_easy_cleanup(curl);
@@ -193,8 +198,7 @@ void BotApi::send_remove_keyboard(std::string message, size_t chat_id, size_t re
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, PostRequest.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, 0);
 
-    curl_slist * header = 0;
-    header = curl_slist_append(header, "Content-Type: application/json");
+   
     
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
     
@@ -224,8 +228,6 @@ void BotApi::forward_message(size_t chat_id, size_t from_chat_id, size_t message
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, PostRequest.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, 0);
 
-    curl_slist * header = 0;
-    header = curl_slist_append(header, "Content-Type: application/json");
     
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
     

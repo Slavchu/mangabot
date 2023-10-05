@@ -1,4 +1,6 @@
 #pragma once
+#define LOG_TO_CONSOLE
+
 #include <mutex>
 #include <vector>
 #include <fstream>

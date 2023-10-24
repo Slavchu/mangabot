@@ -6,9 +6,6 @@
 using json = nlohmann::json;
 using namespace telegraph;
 
-//https://api.telegra.ph/createPage?access_token=d3b25feccb89e508a9114afb82aa421fe2a9712b963b387cc5ad71e58722&title=TEST&author_name=Anonymous&content=[{"tag":"p","children":["test"]},{"tag":"figure","children":[{"tag":"img","attrs":{"src":"\/file\/8b2eb6982d1a27beb1718.jpg"}}]},{"tag":"figure","children":[{"tag":"img","attrs":{"src":"\/file\/8b2eb6982d1a27beb1718.jpg"}}]}]&return_content=true
-
-//https://api.telegra.ph/createPage?access_token=6c33951b1f620f6e7ae926dadc04ba75d87a7a896416e47a3323311cd666&title=somepage&content=[{"children":["FUCK+YOU"],"tag":"p"},{"children":{"attrs":{"src":"\\/file\\/a9067be1f2bb37aff67f3.jpg"},"tag":"img"},"tag":"figure"}]
 
 size_t writeFunction(void *ptr, size_t size, size_t nmemb, std::string* data) {
     data->append((char*) ptr, size * nmemb);

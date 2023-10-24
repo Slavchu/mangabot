@@ -6,6 +6,7 @@
 #include <iostream>
 #include <mutex>
 #include <set>
+#include <memory>
 using namespace mangabot;
 
 Logger * Mangabot::logger = 0;
@@ -70,20 +71,22 @@ void Mangabot::start_bot()
         
         fnmap_mtx.lock();
 
-        for(auto &it :updates){
+        for(auto it :updates){
             auto tm = time(0);
-            logger->add_log(std::string("New update: ") + std::to_string(it.update_id) +" "+ asctime(localtime(&tm)));
-            if(next_funct.find(it.message.from) == next_funct.end()){
-                next_funct[it.message.from] = std::make_shared<FirstMessage>(it);
+            logger->add_log(std::string("New update: ") + std::to_string(it->update_id) +" "+ asctime(localtime(&tm)));
+            if (it->message){
+                if (next_funct.find(it->from) == next_funct.end()){
+                    next_funct[it->from] = std::make_shared<FirstMessage>(it);
+                }
+                else{
+                    next_funct[it->from]->set_update(it);
+                }
 
-                
+                functions.insert(next_funct[it->from]);
             }
-            else{
-                next_funct[it.message.from]->set_update(it);
+            else if(it->callback_query){
+                functions.insert(std::make_shared<CallbackQueryAnalyzer>(it));
             }
-            
-            functions.insert(next_funct[it.message.from]);
-
         }
         
         fnmap_mtx.unlock();
@@ -105,38 +108,70 @@ ThreadManager *mangabot::Mangabot::get_thread_manager(){
 }
 
 MangaFunct::~MangaFunct(){
-    delete update;
+    update.reset();
     next.reset();
 }
 
 void mangabot::MangaFunct::onTaskEnd(){
     fnmap_mtx.lock();
     
-    Mangabot::get_mangabot()->next_funct.erase(update->message.from);
+    Mangabot::get_mangabot()->next_funct.erase(update->from);
 
     if(next){
-        Mangabot::get_mangabot()->next_funct[update->message.from] = next;
+        Mangabot::get_mangabot()->next_funct[update->from] = next;
     }
     fnmap_mtx.unlock();
     
 }
 
 void mangabot::FirstMessage::callFunction(){
-    Mangabot::get_bot_api()->send_message("Привіт! Я бот для читання та публікації манги! Виберіть дію:", update->message.chat_id, 0,{{"Публікація", "Пошук"}});
-    
+    if(update->message){
+        InlineButton button;
+        button.text = "Just a text";
+        button.callback_data = "fuck";
+        std::vector<std::vector<InlineButton>> but = {{button}};
+
+        Mangabot::get_bot_api()->send_message("Привіт! Я бот для читання та публікації манги! Виберіть дію:", update->message->chat_id, 0, std::make_shared<InlineKeyboard>(but));
+    }
+    else{
+        InlineButton button;
+        button.text = "edited text";
+        button.callback_data = "fuck2";
+        std::vector<std::vector<InlineButton>> but = {{button}};
+        Mangabot::get_bot_api()->edit_message_text("Опа, відредаговано", update->callback_query->message->chat_id, update->callback_query->message->message_id, std::make_shared<InlineKeyboard>(but));    
+    }
     next = std::make_shared<FirstMessageAnalyzer>();
 }
 void mangabot::FirstMessageAnalyzer::callFunction(){
-    std::string message = this->update->message.text;
+    if(this->update->message){
+        std::string message = this->update->message->text;
 
-    if(message == "Пошук"){
-        Mangabot::get_bot_api()->send_message("Ще не реалізована функція пошуку!", update->message.chat_id);
-        Mangabot::get_thread_manager()->add_function( std::make_shared<FirstMessage>(*update));
+        if(message == "Пошук"){
+            Mangabot::get_bot_api()->send_message("Ще не реалізована функція пошуку!", update->message->chat_id);
+            Mangabot::get_thread_manager()->add_function( std::make_shared<FirstMessage>(update));
 
+        }
+        else{
+            Mangabot::get_bot_api()->send_message("Ще не реалізована функція пошуку!", update->message->chat_id);
+            Mangabot::get_thread_manager()->add_function( std::make_shared<FirstMessage>(update));
+
+        }
     }
-    else{
-        Mangabot::get_bot_api()->send_message("Ще не реалізована функція пошуку!", update->message.chat_id);
-        Mangabot::get_thread_manager()->add_function( std::make_shared<FirstMessage>(*update));
+}
 
+void mangabot::CallbackQueryAnalyzer::callFunction(){
+    if(!update || !update->callback_query){
+        return;
     }
+    if(update->callback_query->query_data == "fuck"){
+        InlineButton in1; in1.text = "stfu"; in1.callback_data = "fr";
+        std::vector<std::vector<InlineButton>> buttons {{in1}};
+
+        Mangabot::get_bot_api()->edit_message_text(update->callback_query->message->text,update->callback_query->message->chat_id, update->callback_query->message->message_id, std::make_shared<InlineKeyboard>(buttons));
+        return;
+    }
+    InlineButton in1; in1.text = "fuck"; in1.callback_data = "fuck";
+    std::vector<std::vector<InlineButton>> buttons {{in1}};
+
+    Mangabot::get_bot_api()->edit_message_text(update->callback_query->message->text,update->callback_query->message->chat_id, update->callback_query->message->message_id, std::make_shared<InlineKeyboard>(buttons));
 }

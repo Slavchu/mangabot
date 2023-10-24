@@ -10,24 +10,33 @@ namespace mangabot{
     class MangaFunct : public IFunct{
     protected:
         
-        Update * update;
+        std::shared_ptr<Update>  update;
         std::shared_ptr<MangaFunct> next = 0;
     public:
         MangaFunct() = default;
-        MangaFunct(Update update){this->update = new Update(update);}
+        MangaFunct(std::shared_ptr<Update> update){this->update = update;}
         virtual ~MangaFunct();
         void onTaskEnd() override; 
-        void set_update(Update update){
+        void set_update(std::shared_ptr<Update> update){
             if(!this->update)
-                this->update = new Update(update);
+                this->update = update;
         }
     };
+    class CallbackQueryAnalyzer : public MangaFunct{
+        
+        public:
+        CallbackQueryAnalyzer(std::shared_ptr<Update> update):MangaFunct(update){}
+        void callFunction() override;
+        void onTaskEnd() override{};
 
+    };
 
     class FirstMessage: public MangaFunct{
         public:
         FirstMessage() = default;
-        FirstMessage(Update update) : MangaFunct(update){};
+        FirstMessage(std::shared_ptr<Update> update) {
+            set_update(update);
+        };
         virtual void callFunction() override;
         
         
@@ -36,7 +45,7 @@ namespace mangabot{
     class FirstMessageAnalyzer : public MangaFunct{
         public:
         FirstMessageAnalyzer() = default;
-        FirstMessageAnalyzer(Update update):MangaFunct(update){};
+        FirstMessageAnalyzer(std::shared_ptr<Update> update):MangaFunct(update){};
         virtual void callFunction();
         ~FirstMessageAnalyzer() = default;
 

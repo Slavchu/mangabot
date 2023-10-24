@@ -2,12 +2,42 @@
 
 #include <string>
 #include <vector>
-
-enum UpdateType{
-    Message,
-    File,
-    EditedMessage
+#include <memory>
+class IKeyboard{
+    public:
+    virtual ~IKeyboard() = default;
+    virtual std::string reply_markup() = 0;
 };
+class ReplyKeyboard : public IKeyboard{
+    std::vector<std::vector<std::string>> keyboard;
+    bool one_time_keyboard;
+    virtual std::string reply_markup() override;
+
+    public:
+
+    ReplyKeyboard(std::vector<std::vector<std::string>> keyboard, bool one_time_keyboard = true){
+        this->keyboard = keyboard;
+        this->one_time_keyboard = one_time_keyboard;
+    }
+};
+struct InlineButton{
+    std::string text;
+    std::string url;
+    std::string callback_data;
+    InlineButton() = default;
+  
+};
+class InlineKeyboard: public IKeyboard{
+    std::vector<std::vector<InlineButton>> keyboard;
+    
+    public:
+    virtual std::string reply_markup() override;
+    InlineKeyboard(std::vector<std::vector<InlineButton>> keyboard){
+        this->keyboard = keyboard;
+    }
+};
+
+
 struct User{
     size_t user_id;
     bool is_bot;
@@ -25,22 +55,38 @@ struct User{
 struct Message{
     std::string text;
     size_t message_id, chat_id;
-    User from;
     bool is_document;
+    InlineKeyboard * keyboard;
     size_t date;
+};
+struct CallbackQuery{
+
+    std::string query_data;
+    size_t from;
+    std::shared_ptr <Message> message;
+
+
 };
 struct Update{
     size_t update_id;
-    struct Message message;
+    User from;
+    std::shared_ptr<struct Message> message;
+    std::shared_ptr<CallbackQuery> callback_query;
+    ~Update(){
+        message.reset();
+        callback_query.reset();
+    }
 };
+
 class BotApi{
     std::string BotToken;
     size_t update_offset = 0;
 
     public:
     BotApi(std::string token);
-    std::vector<Update> get_updates();
-    void send_message(std::string message, size_t chat_id, size_t reply_to_message_id = 0, std::vector<std::vector<std::string>> buttons = {}, bool one_time_keyboard = true, bool disable_notification = 0, std::string parse_mode = "");
+    std::vector<std::shared_ptr<Update>> get_updates();
+    void send_message(std::string message, size_t chat_id, size_t reply_to_message_id = 0, std::shared_ptr<IKeyboard> keyboard = 0, bool disable_notification = 0, std::string parse_mode = "");
     void send_remove_keyboard(std::string message, size_t chat_id, size_t reply_to_message_id = 0,bool disable_notification = 0, std::string parse_mode = "" );
     void forward_message(size_t chat_id, size_t from_chat_id, size_t message_id);
+    void edit_message_text(std::string message, size_t chat_id, size_t message_id, std::shared_ptr<InlineKeyboard> keyboard = 0, std::string parse_mode = "");
 };

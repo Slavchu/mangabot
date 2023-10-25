@@ -19,7 +19,6 @@
 #include <bot_api.hpp>
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
-#define DBG_BOT_API
 #ifdef DBG_BOT_API
 #include <iostream>
 #endif
@@ -32,9 +31,38 @@ size_t writeFunction(void *ptr, size_t size, size_t nmemb, std::string *data) { 
     return size * nmemb;
 }
 }
-BotApi::BotApi(std::string token): BotToken(token){
-    header = curl_slist_append(header, "Content-Type: application/json");
+std::string BotApi::file_downloader(std::string file_path, size_t file_size){
+    
+auto * curl = curl_easy_init();
+    if(!curl) return nullptr;
+    
+    std::string offset("");
+    if(update_offset != 0){                                         //It's for not to getting updates you have already got. 
+        offset+= "?offset="; 
+        offset+= std::to_string(update_offset);
+    }
 
+
+
+    std::string url = "https://api.telegram.org/file/bot" + BotToken + "/" + file_path;  //forming get request
+    
+    std::string buffer("");
+  
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());            //fucking magic
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunction);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
+
+
+
+    curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+    return buffer;
+
+}
+BotApi::BotApi(std::string token) : BotToken(token)
+{
+    header = curl_slist_append(header, "Content-Type: application/json");
 }
 
 std::vector<std::shared_ptr<Update>> BotApi::get_updates()
@@ -89,24 +117,24 @@ std::vector<std::shared_ptr<Update>> BotApi::get_updates()
                         up->from.username = msg["from"]["username"];
                 }
                 if (msg.find("document") != msg.end()){
-                    message->is_document = true;
                     std::string mime_type= msg["document"]["mime_type"];
                     if (mime_type.find("image") == std::string::npos)
                         continue;
                     else
-                        message->text = msg["document"]["file_id"];
+                        message->file->binary = msg["document"]["file_id"];
                 }
                 else if(msg.find("photo") != msg.end()){
-                    message->is_document = true;
-                    json photo = msg["photo"][0];
-                    for(auto &it : msg ){
-                        if(msg["file_size"] < 5*1024*1024 && photo["filesize"] < msg["file_size"]){
-                            photo = it;
+                    
+                    message->file = std::make_shared<File>();
+                    size_t file_size = 0;
+                    json photos = msg["photo"];
+                    for(auto &it : photos)
+                        if(it["file_size"] < 5*1024*1024  && it["file_size"] > file_size){
+                            message->file->file_id = it["file_id"];
+                            file_size = it["file_size"];
                         }
-                    }
-                    if(photo["file_size"] < 5*1024*1024){
-                        message->text = photo["file_id"];
-                    }
+                    if(!file_size) continue;
+                    
                 }
                 else if (msg.find("text") != msg.end()){
                     message->is_document = false;
@@ -313,6 +341,45 @@ void BotApi::edit_message_text(std::string message, size_t chat_id, size_t messa
     std::cout << reply << std::endl;
 
 #endif
+}
+
+void BotApi::download_document(File &file){
+    auto curl = curl_easy_init();
+    if(!curl){
+        return;
+    }
+    
+    
+    json PostMessage;
+    PostMessage["file_id"] = file.file_id;
+    
+    
+   
+    std::string PostRequest = PostMessage.dump();
+#ifdef DBG_BOT_API
+    std::cout << PostRequest << std::endl;
+#endif
+    std::string reply;
+    std::string url = "https://api.telegram.org/bot" + BotToken + "/getFile";    
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, PostRequest.size());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, PostRequest.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &reply);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,writeFunction);
+   
+    
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
+    
+    curl_easy_perform(curl);
+    json jreply = json::parse(reply);
+    std::string file_path = jreply["result"]["file_path"];
+    file.binary = file_downloader(file_path, (size_t)jreply["result"]["file_size"]);
+    
+
+    
+    curl_easy_cleanup(curl);
+
+    
 }
 
 std::string ReplyKeyboard::reply_markup(){

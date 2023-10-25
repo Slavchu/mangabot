@@ -14,6 +14,8 @@ BotApi * Mangabot::bot_api = 0;
 Mangabot * Mangabot::mangabot = 0;
 size_t Mangabot::update_delay = 1;
 ThreadManager * Mangabot::thread_manager = 0;
+
+telegraph::TelegraphApi * Mangabot::telegraph_api = 0;
 std::mutex fnmap_mtx;
 Mangabot::Mangabot(){
     if(mangabot) return;
@@ -36,6 +38,7 @@ Mangabot::Mangabot(){
         update_delay = setting.get_delay();
         
         bot_api = new BotApi(setting.get_bot_id());
+        telegraph_api = new telegraph::TelegraphApi(telegraph::TelegraphApi::create_account("fuck you"));
         mangabot = this;
        
                 
@@ -66,6 +69,8 @@ void Mangabot::start_bot()
     ss.clear();
     
     std::set<std::shared_ptr<MangaFunct>> functions;
+    
+    
     while(1){
         auto updates = bot_api->get_updates();
         
@@ -126,6 +131,11 @@ void mangabot::MangaFunct::onTaskEnd(){
 
 void mangabot::FirstMessage::callFunction(){
     if(update->message){
+        if(update->message->file){
+            Mangabot::get_bot_api()->download_document(*update->message->file);
+            std::string url = Mangabot::get_telegraph_api()->create_page("some_title", std::vector<std::string>{Mangabot::get_telegraph_api()->upload_image(update->message->file->binary)}, "засуджую твої фото!");
+            Mangabot::get_bot_api()->send_message(url, update->message->chat_id);
+        }
         InlineButton button;
         button.text = "Just a text";
         button.callback_data = "fuck";

@@ -22,19 +22,10 @@ telegraph::TelegraphApi::TelegraphApi(std::string token){
 
 }
 
-std::string telegraph::TelegraphApi::upload_image(std::string path)
+std::string telegraph::TelegraphApi::upload_image(std::string bin)
 {
-    std::string contents, result;
-    std::ifstream in(path, std::ios::in | std::ios::binary);
-
-    if (in.is_open())
-    {
-        in.seekg(0, std::ios::end);
-        contents.resize(in.tellg());
-        in.seekg(0, std::ios::beg);
-        in.read(&contents[0], contents.size());
-        in.close();
-    }
+    std::string result;
+    
     // ##
 
     CURL *curl;
@@ -63,8 +54,8 @@ std::string telegraph::TelegraphApi::upload_image(std::string path)
     curl_formadd(&formpost, &lastptr,
                  CURLFORM_COPYNAME, "file", 
                  CURLFORM_BUFFER, "data",
-                 CURLFORM_BUFFERPTR, contents.data(),
-                 CURLFORM_BUFFERLENGTH, contents.size(),
+                 CURLFORM_BUFFERPTR, bin.data(),
+                 CURLFORM_BUFFERLENGTH, bin.size(),
                  CURLFORM_END);
 
     curl = curl_easy_init();

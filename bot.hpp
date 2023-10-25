@@ -5,8 +5,9 @@
 #include <logger.hpp>
 #include <database.hpp>
 #include <map>
+#include <telegraph.hpp>
 namespace mangabot{
-    
+    using TelegraphApi = telegraph::TelegraphApi;
     class MangaFunct : public IFunct{
     protected:
         
@@ -56,6 +57,7 @@ namespace mangabot{
     class Mangabot{
     
     private:
+        static TelegraphApi * telegraph_api;
         static size_t update_delay;
 
         static BotApi * bot_api;
@@ -74,6 +76,9 @@ namespace mangabot{
             return mangabot;        
         }
         Mangabot();
+        static TelegraphApi* get_telegraph_api(){
+            return telegraph_api;
+        }
         static BotApi* get_bot_api() {
             return bot_api;
         }

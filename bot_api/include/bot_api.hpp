@@ -36,7 +36,13 @@ class InlineKeyboard: public IKeyboard{
         this->keyboard = keyboard;
     }
 };
+struct File{
 
+    std::string file_id;
+    std::string filename;
+    
+    std::string  binary;
+};
 
 struct User{
     size_t user_id;
@@ -58,6 +64,8 @@ struct Message{
     bool is_document;
     InlineKeyboard * keyboard;
     size_t date;
+    std::shared_ptr<File> file;
+
 };
 struct CallbackQuery{
 
@@ -81,7 +89,8 @@ struct Update{
 class BotApi{
     std::string BotToken;
     size_t update_offset = 0;
-
+    private:
+    std::string file_downloader(std::string file_path, size_t size);
     public:
     BotApi(std::string token);
     std::vector<std::shared_ptr<Update>> get_updates();
@@ -89,4 +98,6 @@ class BotApi{
     void send_remove_keyboard(std::string message, size_t chat_id, size_t reply_to_message_id = 0,bool disable_notification = 0, std::string parse_mode = "" );
     void forward_message(size_t chat_id, size_t from_chat_id, size_t message_id);
     void edit_message_text(std::string message, size_t chat_id, size_t message_id, std::shared_ptr<InlineKeyboard> keyboard = 0, std::string parse_mode = "");
+    void download_document(File &file);
+
 };

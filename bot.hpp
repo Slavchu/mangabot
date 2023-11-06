@@ -32,6 +32,43 @@ namespace mangabot{
 
     };
 
+    
+    class Mangabot{
+    
+    private:
+        static TelegraphApi * telegraph_api;
+        static size_t update_delay;
+
+        static BotApi * bot_api;
+        static Logger * logger;
+        static Mangabot * mangabot;
+        static ThreadManager * thread_manager;
+        std::map<User, std::shared_ptr<MangaFunct>> next_funct;
+    private:
+
+
+    public:
+        void tick();
+        void start_bot();
+        static ThreadManager * get_thread_manager();
+        static Mangabot* get_instance() {
+            return mangabot;        
+        }
+        Mangabot();
+        static TelegraphApi* get_telegraph_api_instance(){
+            return telegraph_api;
+        }
+        static BotApi* get_bot_api_instance() {
+            return bot_api;
+        }
+        ~Mangabot(){
+            delete bot_api;
+            delete logger;
+        }
+        
+
+        friend MangaFunct;
+    };
     class FirstMessage: public MangaFunct{
         public:
         FirstMessage() = default;
@@ -52,44 +89,18 @@ namespace mangabot{
 
     };
 
-    
-
-    class Mangabot{
-    
-    private:
-        static TelegraphApi * telegraph_api;
-        static size_t update_delay;
-
-        static BotApi * bot_api;
-        static Logger * logger;
-        static Mangabot * mangabot;
-        static ThreadManager * thread_manager;
-        std::map<User, std::shared_ptr<MangaFunct>> next_funct;
-    private:
-
-
-    public:
-        void tick();
-        void start_bot();
-        static ThreadManager * get_thread_manager();
-        static Mangabot* get_mangabot() {
-            return mangabot;        
-        }
-        Mangabot();
-        static TelegraphApi* get_telegraph_api(){
-            return telegraph_api;
-        }
-        static BotApi* get_bot_api() {
-            return bot_api;
-        }
-        ~Mangabot(){
-            delete bot_api;
-            delete logger;
-        }
+    class CreatePage : public MangaFunct{
         
+        std::shared_ptr<std::vector<std::string>> images;
+        std::string title;
+        public:
+        CreatePage(std::shared_ptr<std::vector<std::string>> img, std::string page_name): images(img), title(page_name){};
 
-        friend MangaFunct;
+        CreatePage() = default;
+        CreatePage(std::shared_ptr<Update> update, std::string page_name):MangaFunct(update),title(page_name) {};
+        virtual void callFunction();
     };
+
     class MangaBotStartupException: public std::exception{
         std::string excep;
         public:
@@ -98,5 +109,4 @@ namespace mangabot{
         }
         
     };
-
 }

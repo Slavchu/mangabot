@@ -21,6 +21,9 @@ class ReplyKeyboard : public IKeyboard{
     }
 };
 struct InlineButton{
+    InlineButton(const std::string& text, const std::string&  url, const std::string& callback_data){
+        this->text = text; this->url = url; this->callback_data = callback_data;
+    }
     std::string text;
     std::string url;
     std::string callback_data;
@@ -94,10 +97,27 @@ class BotApi{
     public:
     BotApi(std::string token);
     std::vector<std::shared_ptr<Update>> get_updates();
-    void send_message(std::string message, size_t chat_id, size_t reply_to_message_id = 0, std::shared_ptr<IKeyboard> keyboard = 0, bool disable_notification = 0, std::string parse_mode = "");
-    void send_remove_keyboard(std::string message, size_t chat_id, size_t reply_to_message_id = 0,bool disable_notification = 0, std::string parse_mode = "" );
+
+    void send_message(const std::string& message, 
+                      size_t chat_id, 
+                      size_t reply_to_message_id = 0, 
+                      std::shared_ptr<IKeyboard> keyboard = 0, 
+                      bool disable_notification = 0, 
+                      const std::string&parse_mode = "");
+
+    void send_remove_keyboard(const std::string& message, 
+                              size_t chat_id, 
+                              size_t reply_to_message_id = 0,
+                              bool disable_notification = 0, 
+                              const std::string& parse_mode = "" );
     void forward_message(size_t chat_id, size_t from_chat_id, size_t message_id);
-    void edit_message_text(std::string message, size_t chat_id, size_t message_id, std::shared_ptr<InlineKeyboard> keyboard = 0, std::string parse_mode = "");
+
+    void edit_message_text(const std::string& message, 
+                            size_t chat_id, 
+                            size_t message_id, 
+                            std::shared_ptr<InlineKeyboard> keyboard = 0, 
+                            const std::string& parse_mode = "");
+
     void download_document(File &file);
 
 };

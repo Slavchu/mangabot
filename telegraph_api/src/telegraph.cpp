@@ -109,7 +109,6 @@ std::string telegraph::TelegraphApi::create_page(std::string title, std::vector<
 
             images[i] = json::parse(images[i])["src"]; 
            
-            std::cout << images[i] << "\n\n";
             json image;
             image["tag"]="img";
             image["attrs"]["src"] = images[i];
@@ -128,7 +127,6 @@ std::string telegraph::TelegraphApi::create_page(std::string title, std::vector<
 
         url+= "&content="+scontent;
         url+="&return_content=true";
-        std::cout << url << std::endl;
         
     }
     auto curl = curl_easy_init();
@@ -140,7 +138,6 @@ std::string telegraph::TelegraphApi::create_page(std::string title, std::vector<
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &reply);
         curl_easy_perform(curl);
         curl_easy_cleanup(curl);
-        std::cout << reply << std::endl;
         json jreply = json::parse(reply);
         if(jreply["ok"] == true){
             return jreply["result"]["url"];
@@ -174,7 +171,7 @@ std::string telegraph::TelegraphApi::create_account(std::string short_name, std:
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &reply);
         curl_easy_perform(curl);
         curl_easy_cleanup(curl);
-
+        if(reply.empty()) return reply;
         json reply_body = json::parse(reply);
         if(reply_body["ok"] == true){
 

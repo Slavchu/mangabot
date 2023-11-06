@@ -171,7 +171,12 @@ std::vector<std::shared_ptr<Update>> BotApi::get_updates()
 }
 
 //this is a huge piece of shit i've written.
-void BotApi::send_message(std::string message, size_t chat_id, size_t reply_to_message_id, std::shared_ptr<IKeyboard> keyboard, bool disable_notification , std::string parse_mode ){
+void BotApi::send_message(const std::string& message, 
+                         size_t chat_id, 
+                         size_t reply_to_message_id, 
+                         std::shared_ptr<IKeyboard> keyboard, 
+                         bool disable_notification,
+                         const std::string& parse_mode ){
 
     auto curl = curl_easy_init();
     if(!curl){
@@ -225,7 +230,7 @@ void BotApi::send_message(std::string message, size_t chat_id, size_t reply_to_m
 #endif
 }
 
-void BotApi::send_remove_keyboard(std::string message, size_t chat_id, size_t reply_to_message_id, bool disable_notification, std::string parse_mode){ //Don't fucking touch it, it just works
+void BotApi::send_remove_keyboard(const std::string& message, size_t chat_id, size_t reply_to_message_id, bool disable_notification, const std::string& parse_mode){ //Don't fucking touch it, it just works
     auto curl = curl_easy_init();
     if(!curl){
         return;
@@ -293,7 +298,7 @@ void BotApi::forward_message(size_t chat_id, size_t from_chat_id, size_t message
     curl_easy_cleanup(curl);
 }
 
-void BotApi::edit_message_text(std::string message, size_t chat_id, size_t message_id, std::shared_ptr<InlineKeyboard> keyboard, std::string parse_mode){
+void BotApi::edit_message_text(const std::string& message, size_t chat_id, size_t message_id, std::shared_ptr<InlineKeyboard> keyboard, const std::string& parse_mode){
      auto curl = curl_easy_init();
     if(!curl){
         return;

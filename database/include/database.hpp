@@ -23,6 +23,33 @@ enum ECategory {
     PLANNING
 };
 
+class Database {
+public:
+    static Database& GetInstance()
+    {
+        static Database mangaDB;
+        return mangaDB;
+    }
+
+    
+    void SetConnection();
+
+    sql::Statement* getStatement() const;
+
+private:
+    sql::Statement *stmt;
+    sql::mysql::MySQL_Driver *driver; 
+    sql::Connection *con; 
+
+    Database(
+        const std::string& host,
+        const std::string& user,
+        const std::string& password,
+        const std::string& database);
+    Database();
+    ~Database();
+};
+
 struct CategoryUser {
     CategoryUser(size_t user_id, size_t team_id = 0, size_t manga_id_size = 0) : 
         user_id(user_id), 
@@ -33,51 +60,9 @@ struct CategoryUser {
     size_t team_id;
     size_t manga_id_size;
 
-    std::array <size_t, MAX_ARR_SIZE> get_manga(size_t page, ECategory category); //перезаписує size_t {catogery}.manga_id [];
-    //void set_var();//кидає змінну на сервер
+    std::array <size_t, MAX_ARR_SIZE> get_manga(size_t page, ECategory category);
+  
     ~CategoryUser() = default;
-};
-
-class Database {
-public:
-    //Constructor
-    Database(const std::string& host, const std::string& user, const std::string& password, const std::string& database)
-        : driver(sql::mysql::get_mysql_driver_instance()), con(driver->connect("tcp://" + host + ":3306", user, password)) {
-        if (con->isValid()) {
-        // The connection is valid
-        std::cout << "Connection to the database is successful." << std::endl;
-        } else {
-        // The connection is not valid
-        std::cerr << "Connection to the database failed." << std::endl;
-        }
-        con->setSchema(database);
-        const std::string intendedSchema = "manga_data";
-        std::string currentSchema = con->getSchema();
-    }
-    
-    void SetConnection()
-    {
-        stmt = con->createStatement();
-    }
-
-    ~Database() {
-        if (con) {
-            delete con;
-        }
-        delete stmt;
-        delete driver;
-    }
-    //Getters
-    sql::Statement* getStatement() const
-    {
-        return stmt;
-    }
-
-
-private:
-    sql::Statement *stmt;
-    sql::mysql::MySQL_Driver *driver; 
-    sql::Connection *con; 
 };
 
 
@@ -95,19 +80,32 @@ class SettingsImporterCriticalException: public std::exception{
     }
 };
 
-class SettingsImporter{
+class SettingsImporter {
+private:
     std::string bot_id;
     unsigned int delay;
     std::string file;
-    public:
-    SettingsImporter(std::string filelocation) :file(filelocation) {
-        
-    };
+    std::string sql_ip;
+    std::string sql_username;
+    std::string sql_password;
+
+public:
+    SettingsImporter(std::string filelocation) : file(filelocation) {}
+
     int import_settings();
-    std::string get_bot_id() const{
+    std::string get_bot_id() const {
         return bot_id;
     }
-    unsigned int get_delay() const{
+    unsigned int get_delay() const {
         return delay;
+    }
+    std::string get_sql_ip() {
+        return sql_ip ;
+    }
+    std::string get_sql_username() {
+        return sql_username ;
+    }
+    std::string get_sql_password() {
+        return sql_password;
     }
 };

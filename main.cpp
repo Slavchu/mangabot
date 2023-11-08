@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <curl/curl.h>
-#include <thread_manager.hpp>
+#include "thread_manager.hpp"
 #include <bot_api.hpp>
 #include <database.hpp>
 #include <fstream>
@@ -10,6 +10,8 @@
 #include <chrono>
 #include <logger.hpp>
 #include <sstream>
+#include "database.hpp"
+
 ThreadManager *thread_manager = NULL;
 class MessageAnalyzer: public IFunct{
     BotApi * bot;

@@ -2,13 +2,7 @@
 #include <fstream>
 
 using namespace std;
-void MangaDatabase::add_manga(string name, MangaLocation location){
-    ofstream database;
-    database.open(database_location, ios::app);
-        if(!database.is_open()) throw MangaDatabaseException_NotFound();
-    database << "\"" << name << "\": " << "\"" << location.chat_id << " " << location.message_id << endl;
-    
-}
+
 int SettingsImporter::import_settings(){
     ifstream in(file);
     if(!in.is_open()){ 
@@ -32,3 +26,21 @@ int SettingsImporter::import_settings(){
     if(!has_bot_id) throw SettingsImporterCriticalException("Bot id field empty");
     return 0;
 }
+
+std::array<size_t, MAX_ARR_SIZE> CategoryUser::get_manga(size_t page, ECategory category) {
+    //Local data
+    Database myDB("172.20.10.3", "root", "123qwe", "manga_data"); 
+    myDB.SetConnection(); 
+    std::string sqlQuery = "SELECT MangaId FROM UserMangaCategories WHERE UserMangaCategories.UserID = " + std::to_string(user_id) + 
+        " AND UserMangaCategories.Category = " + std::to_string(static_cast<int>(category) + 1) + 
+        " Limit 5 OFFSET " + std::to_string(page * 5); 
+    sql::ResultSet* res = myDB.getStatement()->executeQuery(sqlQuery); 
+    
+    int i = 0; 
+    std::array<size_t, MAX_ARR_SIZE> resultArr; 
+    while (res->next()) { 
+        resultArr[i++] = res->getInt("MangaId"); 
+    } 
+    delete res; 
+    return resultArr; 
+} 

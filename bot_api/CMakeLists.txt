@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.14.0)
 
-
+if (POLICY CMP0135) 
+    cmake_policy(SET CMP0135 NEW)
+endif()
 
 add_library(bot_api src/bot_api.cpp include/bot_api.hpp)
 target_include_directories(bot_api PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

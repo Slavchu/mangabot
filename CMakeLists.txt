@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.27.0)
 project(mangabot)
-cmake_policy(SET CMP0135 NEW)
 
 set (EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,stack-size=16000000")

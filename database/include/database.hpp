@@ -25,18 +25,26 @@ enum ECategory {
 
 class Database {
 public:
-    static Database& GetInstance()
+    static Database* GetInstance()
     {
-        static Database mangaDB;
-        return mangaDB;
-    }
+        if (instancePtr == nullptr)
+        {
+            instancePtr = new Database();
+            return instancePtr;
+        }
+        else
+        {
+            return instancePtr;
+        }
+    }   
 
-    
+    Database (const Database& obj) = delete;
+
     void SetConnection();
 
     sql::Statement* getStatement() const;
-
 private:
+    static Database *instancePtr;
     sql::Statement *stmt;
     sql::mysql::MySQL_Driver *driver; 
     sql::Connection *con; 

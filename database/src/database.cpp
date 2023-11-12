@@ -3,6 +3,8 @@
 
 using namespace std;
 
+Database* Database::instancePtr = nullptr;
+
 Database::Database(
     const std::string& host,
     const std::string& user,
@@ -54,12 +56,12 @@ sql::Statement* Database::getStatement() const
 
 std::array <size_t, MAX_ARR_SIZE> CategoryUser::get_manga(size_t page, ECategory category)
 {
-        Database& myDB = Database::GetInstance(); 
-        myDB.SetConnection(); 
+        Database *myDB = Database::GetInstance(); 
+        myDB->SetConnection(); 
         std::string sqlQuery = "SELECT MangaId FROM UserMangaCategories WHERE UserMangaCategories.UserID = " + std::to_string(user_id) + 
             " AND UserMangaCategories.Category = " + std::to_string(static_cast<int>(category) + 1) + 
             " Limit 5 OFFSET " + std::to_string(page * 5); 
-        sql::ResultSet* res = myDB.getStatement()->executeQuery(sqlQuery); 
+        sql::ResultSet* res = myDB->getStatement()->executeQuery(sqlQuery); 
         
         int i = 0; 
         std::array<size_t, MAX_ARR_SIZE> resultArr; 

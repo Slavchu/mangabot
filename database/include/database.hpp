@@ -68,13 +68,11 @@ struct CategoryUser {
     size_t team_id;
     size_t manga_id_size;
 
-    std::array <size_t, MAX_ARR_SIZE> get_manga(size_t page, ECategory category);
+    //Returns and array of Manga ID's corresponding to last 5 mangas in specified category
+    std::array <size_t, MAX_ARR_SIZE> get_manga(ECategory category);
   
     ~CategoryUser() = default;
 };
-
-
-
 
 class SettingsImporterCriticalException: public std::exception{
     std::string exception;

@@ -376,6 +376,7 @@ void BotApi::download_document(File &file){
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
     
     curl_easy_perform(curl);
+    if(reply.empty()) return;
     json jreply = json::parse(reply);
     std::string file_path = jreply["result"]["file_path"];
     file.binary = file_downloader(file_path, (size_t)jreply["result"]["file_size"]);

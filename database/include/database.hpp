@@ -40,7 +40,7 @@ private:
     sql::Statement *stmt;
     sql::mysql::MySQL_Driver *driver; 
     sql::Connection *con; 
-
+public:
     Database(
         const std::string& host,
         const std::string& user,
@@ -99,13 +99,13 @@ public:
     unsigned int get_delay() const {
         return delay;
     }
-    std::string get_sql_ip() {
+    std::string get_sql_ip() const{
         return sql_ip ;
     }
-    std::string get_sql_username() {
+    std::string get_sql_username() const {
         return sql_username ;
     }
-    std::string get_sql_password() {
+    std::string get_sql_password() const {
         return sql_password;
     }
 };

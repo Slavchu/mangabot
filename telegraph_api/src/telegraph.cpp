@@ -24,6 +24,7 @@ telegraph::TelegraphApi::TelegraphApi(std::string token){
 
 std::string telegraph::TelegraphApi::upload_image(std::string bin)
 {
+    if(bin.empty()) return std::string();
     std::string result;
     
     // ##

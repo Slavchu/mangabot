@@ -40,8 +40,9 @@ Mangabot::Mangabot(){
         bot_api = new BotApi(setting.get_bot_id());
         telegraph_api = new telegraph::TelegraphApi(telegraph::TelegraphApi::create_account("fuck you"));
         mangabot = this;
-       
-                
+       // Database(setting.get_sql_ip(), setting.get_sql_username(), setting.get_sql_password(), "manga_data");
+        
+        
     }
     catch(SettingsImporterCriticalException &e){
         if(logger){
@@ -54,8 +55,7 @@ Mangabot::Mangabot(){
     
 }
 
-void Mangabot::start_bot()
-{
+void Mangabot::start_bot(){
     auto t = std::time(0);
     auto tm = *std::localtime(&t);
     std::stringstream ss;
@@ -85,7 +85,7 @@ void Mangabot::start_bot()
 
                 logger->add_log(std::string("Message. Type: ") + message_type + "\nFrom:" + std::to_string(it->from.user_id));
                 if (next_funct.find(it->from) == next_funct.end()){
-                    next_funct[it->from] = std::make_shared<CreatePage>(it, it->from.username);
+                    next_funct[it->from] = std::make_shared<FirstMessage>(it);
                 }
                 else{
                     next_funct[it->from]->set_update(it);
@@ -155,13 +155,41 @@ void mangabot::FirstMessageAnalyzer::callFunction(){
 
         if(message == "Пошук"){
             Mangabot::get_bot_api_instance()->send_message("Ще не реалізована функція пошуку!", update->message->chat_id);
-            Mangabot::get_thread_manager()->add_function( std::make_shared<FirstMessage>(update));
+            Mangabot::get_thread_manager()->add_function( std::make_shared<FirstMessage>(this->update));
 
         }
-        else{
-            Mangabot::get_bot_api_instance()->send_message("Ще не реалізована функція пошуку!", update->message->chat_id);
-            Mangabot::get_thread_manager()->add_function( std::make_shared<FirstMessage>(update));
+        else if(message == "Профіль"){
+            std::stringstream ss;
+            
+            
+            //CategoryUser usr((this->update->from.user_id));
+            //auto alreadyRead = usr.get_manga(0, ECategory::ALREADY_READ);
 
+            if(!this->update->from.username.empty())
+                ss << '@'<< this->update->from.username << std::endl << std::endl;
+            else if(!this->update->from.first_name.empty())
+                ss << this->update->from.first_name << std::endl << std::endl;
+            else if(!this->update->from.last_name.empty())
+                ss << this->update->from.last_name << std::endl << std::endl;
+            ss << "В процесі:"; 
+            ss << 0 << std::endl; //переписати після реалізації функцій в CategoryUser
+            ss << "Прочитано:";
+            ss << 0 << std::endl;
+            ss << "В планах:";
+            ss << "0" << std::endl;
+            InlineButton b1("В процесі", "" , "READING_" + this->update->from.first_name);
+            InlineButton b2("Прочитані", "" , "ALREADY_READ_" + this->update->from.first_name);
+            InlineButton b3("В планах", "" , "PLANING_" + this->update->from.first_name);
+            std::vector<std::vector<InlineButton>> buttons  = {{b1}, {b2}, {b3}};
+            Mangabot::get_bot_api_instance()->send_message(ss.str(), this->update->message->chat_id, 0, std::make_shared<InlineKeyboard>(buttons));
+            next = std::make_shared<FirstMessageAnalyzer>();
+        }
+        else if(message == "Додати мангу"){
+            Mangabot::get_thread_manager()->add_function(std::make_shared<CreatePage>(this->update, "Page name"));
+        }
+        else{
+            Mangabot::get_bot_api_instance()->send_message("404", update->message->chat_id);
+            Mangabot::get_thread_manager()->add_function( std::make_shared<FirstMessage>(update));
         }
     }
 }
@@ -170,22 +198,21 @@ void mangabot::CallbackQueryAnalyzer::callFunction(){
     if(!update || !update->callback_query){
         return;
     }
-    if(update->callback_query->query_data == "fuck"){
-        InlineButton in1; in1.text = "stfu"; in1.callback_data = "fr";
-        std::vector<std::vector<InlineButton>> buttons {{in1}};
+    if(update->callback_query->query_data.find("ALREADY_READ") != std::string::npos){
+        
 
-        Mangabot::get_bot_api_instance()->edit_message_text(update->callback_query->message->text,update->callback_query->message->chat_id, update->callback_query->message->message_id, std::make_shared<InlineKeyboard>(buttons));
+        Mangabot::get_bot_api_instance()->edit_message_text("Не реалізовано! Вибачте:(",update->callback_query->message->chat_id, update->callback_query->message->message_id);
         return;
     }
-    InlineButton in1; in1.text = "fuck"; in1.callback_data = "fuck";
-    std::vector<std::vector<InlineButton>> buttons {{in1}};
-
-    Mangabot::get_bot_api_instance()->edit_message_text(update->callback_query->message->text,update->callback_query->message->chat_id, update->callback_query->message->message_id, std::make_shared<InlineKeyboard>(buttons));
+   Mangabot::get_bot_api_instance()->edit_message_text("Не реалізовано! Вибачте:(",update->callback_query->message->chat_id, update->callback_query->message->message_id);
 }
 
 void mangabot::CreatePage::callFunction(){
     if(update){
-        if(update->message->text == "Скасувати") return;
+        if(update->message->text == "Скасувати"){
+            Mangabot::get_thread_manager()->add_function(std::make_shared<FirstMessage>(this->update));
+            return;
+        }
         if(update->message->text == "Завершити"){
             if(!images || !images->size()) return;
             auto page = Mangabot::get_telegraph_api_instance()->create_page(title, *images, "text" );
@@ -204,13 +231,14 @@ void mangabot::CreatePage::callFunction(){
             return;
 
         }
-        if(!update->message->file) {
-            next = std::make_shared<CreatePage>(images, title);    
-            return;
+        if (!update->message->file) {
+          next = std::make_shared<CreatePage>(images, title);
+          return;
         }
-        
+
         Mangabot::get_bot_api_instance()->download_document(*update->message->file);
         images->push_back(Mangabot::get_telegraph_api_instance()->upload_image(update->message->file->binary));
+        
         next = std::make_shared<CreatePage>(images, title);
         images.reset();
     }

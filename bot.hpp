@@ -6,6 +6,8 @@
 #include <database.hpp>
 #include <map>
 #include <telegraph.hpp>
+
+
 namespace mangabot{
     using TelegraphApi = telegraph::TelegraphApi;
     class MangaFunct : public IFunct{
@@ -88,7 +90,7 @@ namespace mangabot{
         ~FirstMessageAnalyzer() = default;
 
     };
-
+    
     class CreatePage : public MangaFunct{
         
         std::shared_ptr<std::vector<std::string>> images;
@@ -108,5 +110,10 @@ namespace mangabot{
             return excep.c_str();
         }
         
+    };
+    class FindManga : public MangaFunct{
+        
+        public:
+
     };
 }

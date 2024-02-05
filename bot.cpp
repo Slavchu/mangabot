@@ -1,3 +1,8 @@
+/*
+    Hey! Don't go here
+    Only God and me know what's happening here. 
+    Now I forgot it, so only God knows
+*/
 #include "bot.hpp"
 #include <database.hpp>
 #include <ctime>
@@ -162,8 +167,8 @@ void mangabot::FirstMessageAnalyzer::callFunction(){
             std::stringstream ss;
             
             
-            //CategoryUser usr((this->update->from.user_id));
-            //auto alreadyRead = usr.get_manga(0, ECategory::ALREADY_READ);
+            CategoryUser usr((this->update->from.user_id));
+            
 
             if(!this->update->from.username.empty())
                 ss << '@'<< this->update->from.username << std::endl << std::endl;
@@ -171,21 +176,33 @@ void mangabot::FirstMessageAnalyzer::callFunction(){
                 ss << this->update->from.first_name << std::endl << std::endl;
             else if(!this->update->from.last_name.empty())
                 ss << this->update->from.last_name << std::endl << std::endl;
+            
             ss << "В процесі:"; 
-            ss << 0 << std::endl; //переписати після реалізації функцій в CategoryUser
+            ss << "undef" << std::endl; //переписати після реалізації функцій в CategoryUser
             ss << "Прочитано:";
             ss << 0 << std::endl;
             ss << "В планах:";
             ss << "0" << std::endl;
-            InlineButton b1("В процесі", "" , "READING_" + this->update->from.first_name);
-            InlineButton b2("Прочитані", "" , "ALREADY_READ_" + this->update->from.first_name);
-            InlineButton b3("В планах", "" , "PLANING_" + this->update->from.first_name);
+            
+            InlineButton b1("В процесі", "" , "READING_" + std::to_string(this->update->from.user_id));
+            InlineButton b2("Прочитані", "" , "ALREADY_READ_" + std::to_string(this->update->from.user_id));
+            InlineButton b3("В планах", "" , "PLANING_" + std::to_string(this->update->from.user_id));
             std::vector<std::vector<InlineButton>> buttons  = {{b1}, {b2}, {b3}};
             Mangabot::get_bot_api_instance()->send_message(ss.str(), this->update->message->chat_id, 0, std::make_shared<InlineKeyboard>(buttons));
             next = std::make_shared<FirstMessageAnalyzer>();
         }
         else if(message == "Додати мангу"){
-            Mangabot::get_thread_manager()->add_function(std::make_shared<CreatePage>(this->update, "Page name"));
+            
+            /*
+                Реалізувати пошук юзера, перевірити його team_id, якщо 0, то виводити, що він не є членом команди
+            */
+            CategoryUser usr (this->update->from.user_id);
+            if(usr.team_id)
+                Mangabot::get_thread_manager()->add_function(std::make_shared<CreatePage>(this->update, "Page name"));
+            else{
+                Mangabot::get_bot_api_instance()->send_message("Ви не є членом комуністичної партії", this->update->message->chat_id);
+
+            }
         }
         else{
             Mangabot::get_bot_api_instance()->send_message("404", update->message->chat_id);
@@ -199,8 +216,6 @@ void mangabot::CallbackQueryAnalyzer::callFunction(){
         return;
     }
     if(update->callback_query->query_data.find("ALREADY_READ") != std::string::npos){
-        
-
         Mangabot::get_bot_api_instance()->edit_message_text("Не реалізовано! Вибачте:(",update->callback_query->message->chat_id, update->callback_query->message->message_id);
         return;
     }

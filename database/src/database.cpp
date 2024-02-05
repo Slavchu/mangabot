@@ -1,7 +1,9 @@
-#include <database.hpp>
+#include "database.hpp"
 #include <fstream>
 
 using namespace std;
+
+Database* Database::instancePtr = nullptr;
 
 Database::Database(
     const std::string& host,
@@ -52,20 +54,22 @@ sql::Statement* Database::getStatement() const
     return stmt;
 }
 
-std::array <size_t, MAX_ARR_SIZE> CategoryUser::get_manga(size_t page, ECategory category)
+
+std::array <size_t, MAX_ARR_SIZE> CategoryUser::get_manga(ECategory category)
 {
-        Database& myDB = Database::GetInstance(); 
-        myDB.SetConnection(); 
+        Database *myDB = Database::GetInstance(); 
+        myDB->SetConnection(); 
         std::string sqlQuery = "SELECT MangaId FROM UserMangaCategories WHERE UserMangaCategories.UserID = " + std::to_string(user_id) + 
-            " AND UserMangaCategories.Category = " + std::to_string(static_cast<int>(category) + 1) + 
-            " Limit 5 OFFSET " + std::to_string(page * 5); 
-        sql::ResultSet* res = myDB.getStatement()->executeQuery(sqlQuery); 
+        " AND UserMangaCategories.Category = " + std::to_string(static_cast<int>(category) + 1) + 
+        " ORDER BY MangaId DESC LIMIT 5";
+        sql::ResultSet* res = myDB->getStatement()->executeQuery(sqlQuery); 
         
         int i = 0; 
         std::array<size_t, MAX_ARR_SIZE> resultArr; 
         while (res->next()) { 
             resultArr[i++] = res->getInt("MangaId"); 
-        } 
+            std::cout << resultArr[i - 1] << std::endl;
+        }
         delete res; 
         return resultArr; 
 }
@@ -101,12 +105,9 @@ int SettingsImporter::import_settings() {
     }
 
     if (!has_bot_id) throw SettingsImporterCriticalException("Bot id field empty");
-    if (!has_sql_ip) throw SettingsImporterCriticalException("SQL IP field empty");
-    if (!has_sql_username) throw SettingsImporterCriticalException("SQL username field empty");
-    if (!has_sql_password) throw SettingsImporterCriticalException("SQL password field empty");
+    // if (!has_sql_ip) throw SettingsImporterCriticalException("SQL IP field empty");
+    // if (!has_sql_username) throw SettingsImporterCriticalException("SQL username field empty");
+    // if (!has_sql_password) throw SettingsImporterCriticalException("SQL password field empty");
     
     return 0;
 }
-
-
-

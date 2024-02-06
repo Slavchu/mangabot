@@ -114,6 +114,6 @@ namespace mangabot{
     class FindManga : public MangaFunct{
         
         public:
-
+        virtual void callFunction() override;
     };
 }

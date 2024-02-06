@@ -45,7 +45,12 @@ Mangabot::Mangabot(){
         bot_api = new BotApi(setting.get_bot_id());
         telegraph_api = new telegraph::TelegraphApi(telegraph::TelegraphApi::create_account("fuck you"));
         mangabot = this;
-       // Database(setting.get_sql_ip(), setting.get_sql_username(), setting.get_sql_password(), "manga_data");
+
+
+       /*   TODO
+            1.Авторизація в базі даних
+            2.Створення та авторизація в telegraph api
+       */
         
         
     }
@@ -60,7 +65,10 @@ Mangabot::Mangabot(){
     
 }
 
+//Тут не трогати, тут стращно і може йобнути абсолютно все
+//Але на майбутнє - чистити із пам'яті тих користувачів, що очікують на повідомлення овер n часу. Оперативку шкода
 void Mangabot::start_bot(){
+    
     auto t = std::time(0);
     auto tm = *std::localtime(&t);
     std::stringstream ss;
@@ -126,7 +134,7 @@ MangaFunct::~MangaFunct(){
     update.reset();
     next.reset();
 }
-
+//Це також не трогати
 void mangabot::MangaFunct::onTaskEnd(){
     fnmap_mtx.lock();
     
@@ -139,6 +147,7 @@ void mangabot::MangaFunct::onTaskEnd(){
     
 }
 
+//В майбутньому було б добре пам'ятати стан з останнього запуску бота
 void mangabot::FirstMessage::callFunction(){
     if(update->message){
         if(update->message->file){
@@ -154,6 +163,8 @@ void mangabot::FirstMessage::callFunction(){
     
     next = std::make_shared<FirstMessageAnalyzer>();
 }
+
+//В стані активного розвитку!
 void mangabot::FirstMessageAnalyzer::callFunction(){
     if(this->update->message){
         std::string message = this->update->message->text;

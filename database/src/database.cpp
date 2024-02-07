@@ -338,7 +338,7 @@ void insertChapter(Chapter& chapter, Database* db) {
         throw std::invalid_argument("Database instance is null");
     }
 
-    std::string checkChapterQuery = "SELECT * FROM Chapter WHERE MangaID = ? AND ChapterNumber = ?";
+    std::string checkChapterQuery = "SELECT * FROM MangaChapters WHERE MangaID = ? AND ChapterNumber = ?";
     std::vector<MyVariant> checkChapterParams = {chapter.MangaID, chapter.ChapterNumber};
     std::unique_ptr<sql::PreparedStatement> checkChapterStmt(db->FactPreparedStatement(checkChapterQuery));
     std::unique_ptr<sql::ResultSet> checkChapterRes(db->executeQueryWithParams(checkChapterStmt, checkChapterParams));
@@ -347,7 +347,7 @@ void insertChapter(Chapter& chapter, Database* db) {
         throw std::runtime_error("Chapter with the given chapter number already exists for the MangaID");
     }
 
-    std::string insertChapterQuery = "INSERT INTO Chapter (MangaID, ChapterNumber, Title, URL, ReleaseDate) VALUES (?, ?, ?, ?, NOW())";
+    std::string insertChapterQuery = "INSERT INTO MangaChapters (MangaID, ChapterNumber, Title, URL, ReleaseDate) VALUES (?, ?, ?, ?, NOW())";
     std::vector<MyVariant> insertChapterParams = {chapter.MangaID, chapter.ChapterNumber, chapter.Title, chapter.URL};
 
     std::unique_ptr<sql::PreparedStatement> insertChapterStmt(db->FactPreparedStatement(insertChapterQuery));
@@ -367,6 +367,22 @@ void insertChapter(Chapter& chapter, Database* db) {
     }
 }
 
+Chapter findChapter(const std::string& column, MyVariant param, Database* db) {
+    if (!db) {
+        throw std::invalid_argument("Database instance is null");
+    }
+
+    std::string query = "SELECT * FROM MangaChapters WHERE " + column + " = ?";
+    std::vector<MyVariant> params = {param};
+    std::unique_ptr<sql::PreparedStatement> prepStmt(db->FactPreparedStatement(query));
+    std::unique_ptr<sql::ResultSet> result(db->executeQueryWithParams(prepStmt, params));
+
+    if (result->next()) {
+        return Chapter(result);
+    }
+
+    throw std::runtime_error("Manga chapter not found with the given parameter");
+}
 
 bool updateChapter(const Chapter& chapter, Database* db) {
     if (!db) {
@@ -374,7 +390,7 @@ bool updateChapter(const Chapter& chapter, Database* db) {
     }
 
     // Check if the chapter with the given ChapterID exists
-    std::string checkChapterQuery = "SELECT * FROM Chapter WHERE ChapterID = ?";
+    std::string checkChapterQuery = "SELECT * FROM MangaChapters WHERE ChapterID = ?";
     std::vector<MyVariant> checkChapterParams = {chapter.ChapterID};
     std::unique_ptr<sql::PreparedStatement> checkChapterStmt(db->FactPreparedStatement(checkChapterQuery));
     std::unique_ptr<sql::ResultSet> checkChapterRes(db->executeQueryWithParams(checkChapterStmt, checkChapterParams));
@@ -384,7 +400,7 @@ bool updateChapter(const Chapter& chapter, Database* db) {
     }
 
     // Update the chapter values
-    std::string updateChapterQuery = "UPDATE Chapter SET MangaID = ?, ChapterNumber = ?, Title = ?, URL = ? WHERE ChapterID = ?";
+    std::string updateChapterQuery = "UPDATE MangaChapters SET MangaID = ?, ChapterNumber = ?, Title = ?, URL = ? WHERE ChapterID = ?";
     std::vector<MyVariant> updateChapterParams = {chapter.MangaID, chapter.ChapterNumber, chapter.Title, chapter.URL, chapter.ChapterID};
     std::unique_ptr<sql::PreparedStatement> updateChapterStmt(db->FactPreparedStatement(updateChapterQuery));
 

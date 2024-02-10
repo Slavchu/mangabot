@@ -20,11 +20,11 @@
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
 
-using MyVariant = std::variant<size_t, int, std::string, double>;
-
 using namespace std;
 using namespace sql;
 using namespace sql::mysql;
+
+using MyVariant = std::variant<size_t, int, std::string, double>;
 
 #define MAX_ARR_SIZE 5
 
@@ -93,6 +93,10 @@ struct CategoryUser
     ~CategoryUser() = default;
 };
 
+void createUser(CategoryUser& user, Database *db);
+CategoryUser findUser(const std::string& Column, MyVariant param, Database*db);
+bool updateUser(const CategoryUser& user, Database* db);
+
 struct TranslationTeam {
     std::string Description;
     size_t TsTeamID;
@@ -107,6 +111,10 @@ struct TranslationTeam {
 
     friend std::ostream& operator<<(std::ostream& os, const TranslationTeam& team);
 };
+
+void createTranslationTeam(TranslationTeam& team, Database* db);
+TranslationTeam findTeam(const std::string& columnName, const MyVariant& columnValue, Database* db);
+bool updateTranslationTeam(const TranslationTeam& team, Database* db) ;
 
 struct Chapter {
     size_t ChapterID;
@@ -124,6 +132,10 @@ struct Chapter {
 
     friend std::ostream& operator<<(std::ostream& os, const Chapter& chapter);
 };
+
+void insertChapter(Chapter& chapter, Database* db);
+Chapter findChapter(const std::string& column, MyVariant param, Database* db);
+bool updateChapter(const Chapter& chapter, Database* db);
 
 struct Manga {
     size_t MangaID;
@@ -144,6 +156,11 @@ struct Manga {
 
     friend std::ostream& operator<<(std::ostream& os, const Manga& manga);
 };
+
+std::array<size_t, MAX_ARR_SIZE> get_manga(size_t user_id, ECategory category, Database *db);
+void createManga(Manga& manga, Database* db);
+Manga findManga(const std::string& column, MyVariant param, Database* db);
+bool updateManga(const Manga& manga, Database* db);
 
 class SettingsImporterCriticalException: public std::exception{
     std::string exception;
